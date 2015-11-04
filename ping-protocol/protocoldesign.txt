@@ -1,0 +1,72 @@
+Firstly I decided to do this assignment in python 2.7 because first python is a very high level language 
+
+so I don't worry about the very low level abstractions of Sockets programming and secondly I haven't 
+
+programmed much in python so this will be a learning experience for me in python. 
+
+
+	UDP Packets:
+	In this we have to create a ping server . We have used UDP socket. TCP requires
+	establishment of the connection , but in UDP no prior establishment of connection is required.
+
+	Message Exchanged and Rules:
+	The type of messages exchanged are Strings sent with the help of byte array as specified in the UDP 
+
+	socket . The client side adds the 
+	
+	sequence number of the packet at the end of the string. This is helpful in determining any out of 
+
+	order packet . The server also has the 
+	
+	same functionality of adding the index of the packet at the end of string (defined as "HELLO SERVER")  
+
+	that the server sends.
+
+
+	Message Semantics:
+	The messages are usually sent with an byte array of 1024.
+
+
+1)Protocol design of the Server:
+	First and foremost I decided to use UDP sockets for communication as the objective of the assignment 
+
+	if related to Loss and Delay of packets this will serve as a better/realistic model. As mentioned in 
+
+	the question the parameters AVERAGE_DELAY and LOST_RATE is tunable. So basically I randomly decide on 
+
+	how many packets to be dropped and randomly choose that many in-dices. Now I listen indefinitely on 
+
+	that socket. If I get a packet whose Index I randomly choose before to be dropped I don't reply back 
+
+	to the client and start listening for the next packet. It ts a normal packet i.e. not to dropped I 
+
+	simply add the average delay to it and send it back to the client. The server design is pretty simple 
+
+	and nontrivial.
+
+2)Protocol design of the Client:
+	In the client side I'm basically sending a string to the server side 10 times in intervals of 1 second 
+
+	and basically after I receive the response I calculate the RTT. As I get the RTT values for each case 
+
+	I keep updating the MAXRTT and MINRTT values. So now coming to the important question of "What happens 
+
+	if the server drops the packet?" i.e. we are listening on the client side for the server side to reply 
+
+	so how can we handle this situation. This can be handled by threading i.e. creating a new thread. So 
+
+	basically what I do is I put the whole process of sending data and listening for data on the client 
+
+	side in a new thread. So I create a new thread and pass it my pingOnce function. Whilst in main 
+
+	process I sleep the execution for a second. Now if data is received in my thread then I calculate the 
+
+	delay and set a global flag which indeed is used in my main process to check if the data is received 
+
+	by the client. So if no data is received in thread then after 1 second when the main process executes 
+
+	it sees that global flag is not set and assume packet to be dropped. So now basically I store all the 
+
+	RTT values of all the packets which arent dropped and the MINRTT and MAXRTT values. After all this 
+
+	data is collected I just print all the necessary statistics as the official ping in LINUX does.
